@@ -5,8 +5,9 @@ from slack import views
 urlpatterns = [
     url(r'^slacks/$', views.SlackList.as_view()),
     url(r'^slacks/(?P<pk>[0-9]+)/$', views.SlackDetail.as_view()),
-    url(r'^users/$', views.UserList.as_view()),
-    url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
+    url(r'^signup/$', views.UserSignup.as_view()),
+    url(r'^login/$', views.UserLogin.as_view()),
+    # url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
     url(r'^registers/$', views.RegisterList.as_view()),
 ]
 

@@ -17,9 +17,24 @@ class UserSignup(generics.CreateAPIView):
 
 class UserLogin(generics.GenericAPIView):
 
-
-    queryset = User.objects.all()
+    # queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        email = request.data['email']
+        print(email)
+        pwd = request.data['password']
+        print(pwd)
+        user = User.objects.filter(email=email)
+        print(user)
+
+        if user is None:
+            print("user exist")
+        elif not user.check_password(pwd):
+            print("pwd error")
+        else:
+            print("login ok")
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
