@@ -3,10 +3,11 @@ from slack.models import Slack,User,Register
 from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer
 from rest_framework import generics
 from rest_framework import permissions
-import logging
-import hashlib
-logger = logging.getLogger(__name__)
+from rest_framework.response import Response
+from rest_framework import status
 
+import logging
+logger = logging.getLogger(__name__)
 
 class UserSignup(generics.CreateAPIView):
     serializer_class = UserSerializer
@@ -23,23 +24,17 @@ class UserLogin(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
 
         email = request.data['email']
-        print(email)
         pwd = request.data['password']
-        print(pwd)
         user = User.objects.filter(email=email)
-        print(user)
 
         if user is None:
-            print("user exist")
-        elif not user.check_password(pwd):
-            print("pwd error")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif not check_password(pwd,user[0].password):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            print("login ok")
-
-
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+            request.session['userNickname'] = user[0].nickname
+            serializer = UserSerializer(user,many=True)
+            return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
 
 
 class SlackList(generics.ListCreateAPIView):
