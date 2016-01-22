@@ -38,6 +38,7 @@ class Register(models.Model):
     id = models.AutoField(primary_key=True)
     # 0-대기, 1-승인, 2-거절
     type = models.IntegerField()
+    description = models.TextField(default="")
     created = models.DateTimeField(auto_now_add=True)
     #foreignkey
     user =models.ForeignKey('User',on_delete=models.CASCADE,related_name='register_user')

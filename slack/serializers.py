@@ -32,7 +32,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     slack = serializers.ReadOnlyField(source='slack.name')
     class Meta:
         model = Register
-        fields = ('id','type','created','user','slack')
+        fields = ('id','type','description','created','user','slack')
 
 
 # from django.forms import widgets

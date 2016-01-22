@@ -56,6 +56,9 @@ class RegisterList(generics.ListCreateAPIView):
 
     #user, slack 외래키 값 입력을 위한 오버라이딩 메소드
     def perform_create(self, serializer):
-        # requeset.POST or request.data ??
-        queryset = Slack.objects.get(self.request.data.get('slack'))
-        serializer.save(user=self.request.user,slack=queryset)
+        slack = Slack.objects.get(self.request.data.get('slack'))
+        serializer.save(user=self.request.user,slack=slack)
+
+class RegisterDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Register.objects.all()
+    serializer_class = RegisterSerializer
