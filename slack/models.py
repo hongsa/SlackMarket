@@ -16,6 +16,9 @@ class User(models.Model):
     sex = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.email
+
 #슬랙 테이블
 class Slack(models.Model):
     id = models.AutoField(primary_key=True)
@@ -30,6 +33,9 @@ class Slack(models.Model):
     #foreignkey
     user =models.ForeignKey('User',on_delete=models.CASCADE,related_name='slack_user')
 
+    def __str__(self):
+        return self.name
+
     def save(self, *args, **kwargs):
         super(Slack, self).save(*args, **kwargs)
 
@@ -43,6 +49,9 @@ class Register(models.Model):
     #foreignkey
     user =models.ForeignKey('User',on_delete=models.CASCADE,related_name='register_user')
     slack = models.ForeignKey('Slack',on_delete=models.CASCADE,related_name='register_slack')
+
+    def __str__(self):
+        return self.description
 
     def save(self, *args, **kwargs):
         super(Register, self).save(*args, **kwargs)
