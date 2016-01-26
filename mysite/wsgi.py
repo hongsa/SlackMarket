@@ -11,6 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+# settings 폴더안에 바꾸었으니 .prod 안에 들어가야한다
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings.prod")
 
 application = get_wsgi_application()
