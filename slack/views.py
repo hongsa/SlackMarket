@@ -1,10 +1,12 @@
 from django.contrib.auth.hashers import make_password,check_password
 from slack.models import Slack,User,Register
-from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer
+from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackRegisterSerializer
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
+from slack.permissions import IsOwnerOrReadOnly
+from rest_framework.decorators import api_view
 
 import logging
 logger = logging.getLogger(__name__)
@@ -42,10 +44,10 @@ class UserLogin(generics.GenericAPIView):
 #     queryset = User.objects.all()
 #     serializer_class = UserSerializer
 
-
 class SlackList(generics.ListCreateAPIView):
     queryset = Slack.objects.all()
     serializer_class = SlackSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
     #User외래키 값 입력을 위한 오버라이딩 메소드
     def perform_create(self, serializer):
@@ -54,6 +56,7 @@ class SlackList(generics.ListCreateAPIView):
 class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Slack.objects.all()
     serializer_class = SlackSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
 
 class RegisterList(generics.ListCreateAPIView):
@@ -70,21 +73,38 @@ class RegisterDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RegisterSerializer
 
 
-class MyRegisterList(generics.GenericAPIView):
+@api_view(['GET','POST'])
+def my_register(request,pk):
+    try:
+        my_register = Register.objects.filter(user_id=pk)
+    except Register.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    queryset = Register.objects.all()
-    serializer_class = RegisterSerializer
-
-    def get(self, request, *args, **kwargs):
-
-        registers = Register.objects.filter(user_id = request.data['id'])
-        print(registers)
-        return "sssss"
-
-
+    if request.method == "GET":
+        serializer = MyRegisterSerializer(my_register,many=True)
+        return Response(serializer.data)
 
 
+@api_view(['GET','PUT'])
+def my_slack_register(request,pk):
 
+    if request.method == "GET":
+        try:
+            my_slack_register = Register.objects.filter(slack_id=pk)
+        except Register.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
+        serializer = MySlackRegisterSerializer(my_slack_register,many=True)
+        return Response(serializer.data)
 
-# class MySlackRegister(generics.GenericAPIView):
+    if request.method == "POST":
+
+        try:
+            my_slack_register = Register.objects.filter(slack_id=pk, user_id=request.data['user_id'])
+        except Register.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = MySlackRegisterSerializer(my_slack_register)
+        if serializer.is_valid():
+            serializer.save()
+

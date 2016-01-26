@@ -13,4 +13,4 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # 쓰기 권한은 코드 조각의 소유자에게만 부여함
-        return obj.owner == request.user
+        return obj.user == request.user

@@ -43,7 +43,7 @@ class Slack(models.Model):
 class Register(models.Model):
     id = models.AutoField(primary_key=True)
     # 0-대기, 1-승인, 2-거절
-    type = models.IntegerField()
+    type = models.IntegerField(default=0)
     description = models.TextField(default="")
     created = models.DateTimeField(auto_now_add=True)
     #foreignkey
