@@ -23,8 +23,8 @@ class UserLogin(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
 
-        email = request.data['email']
-        pwd = request.data['password']
+        email = request.POST.get('email',False)
+        pwd = request.POST.get('password',False)
         user = User.objects.filter(email=email)
 
         if user is None:
@@ -34,7 +34,13 @@ class UserLogin(generics.GenericAPIView):
         else:
             request.session['userNickname'] = user[0].nickname
             serializer = UserSerializer(user,many=True)
+            print("good")
             return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
+
+
+# class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
 
 
 class SlackList(generics.ListCreateAPIView):
@@ -62,3 +68,23 @@ class RegisterList(generics.ListCreateAPIView):
 class RegisterDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Register.objects.all()
     serializer_class = RegisterSerializer
+
+
+class MyRegisterList(generics.GenericAPIView):
+
+    queryset = Register.objects.all()
+    serializer_class = RegisterSerializer
+
+    def get(self, request, *args, **kwargs):
+
+        registers = Register.objects.filter(user_id = request.data['id'])
+        print(registers)
+        return "sssss"
+
+
+
+
+
+
+
+# class MySlackRegister(generics.GenericAPIView):

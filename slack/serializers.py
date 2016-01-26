@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 class SlackSerializer(serializers.ModelSerializer):
 
     # 외래키로 연결된 user부분을 보여준다. 그러나 값을 입력은 불가
-    user = serializers.ReadOnlyField(source='user.nickname')
+    user = serializers.ReadOnlyField(source='user.id')
 
     class Meta:
         model = Slack
@@ -28,28 +28,8 @@ class SlackSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
 
-    user = serializers.ReadOnlyField(source='user.nickname')
-    slack = serializers.ReadOnlyField(source='slack.name')
+    user = serializers.ReadOnlyField(source='user.id')
+    slack = serializers.ReadOnlyField(source='slack.id')
     class Meta:
         model = Register
         fields = ('id','type','description','created','user','slack')
-
-
-# from django.forms import widgets
-# from rest_framework import serializers
-# from slack.models import Slack
-# from django.contrib.auth.models import User
-#
-# class UserSerializer(serializers.ModelSerializer):
-#     slack = serializers.PrimaryKeyRelatedField(many=True, queryset=Slack.objects.all())
-#
-#     class Meta:
-#         model = User
-#         fields = ('id', 'email', 'nickname','age','sex')
-#
-# class SlackSerializer(serializers.ModelSerializer):
-#     # owner = serializers.ReadOnlyField(source='owner.username')
-#     class Meta:
-#         model = Slack
-#         fields = ('id', 'name','description','type','category')
-#
