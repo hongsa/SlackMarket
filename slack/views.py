@@ -1,5 +1,6 @@
+from django.shortcuts import render
 from django.contrib.auth.hashers import make_password,check_password
-from slack.models import Slack,User,Register
+from slack.models import Slack,Register
 from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackRegisterSerializer
 from rest_framework import generics
 from rest_framework import permissions
@@ -7,16 +8,63 @@ from rest_framework.response import Response
 from rest_framework import status
 from slack.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
+from django.views.decorators.csrf import csrf_exempt
+from django.dispatch import receiver
+from allauth.account.signals import user_signed_up
+
+
 
 import logging
 logger = logging.getLogger(__name__)
 
-class UserSignup(generics.CreateAPIView):
-    serializer_class = UserSerializer
+@receiver(user_signed_up)
+def set_gender(sender, **kwargs):
+    user = kwargs.pop('user')
+    extra_data = user.socialaccount_set.filter(provider='facebook')[0].extra_data
+    gender = extra_data['gender']
 
-    def perform_create(self, serializer):
-        password = make_password(self.request.data.get('password'))
-        serializer.save(password=password)
+    if gender == 'female':
+        user.gender = 'female'
+
+    user.save()
+
+# class UserSignup(generics.CreateAPIView):
+#     serializer_class = UserSerializer
+# #
+#     def perform_create(self, serializer):
+#         print(self.request.data)
+#         email = self.request.data.get('email')
+#         nickname = self.request.data.get('nickname')
+#         name = self.request.data.get('name')
+#         gender = self.request.data.get('gender')
+#         password = self.request.data.get('user_id')
+#
+#         print(email,nickname,name,gender,password)
+#         serializer.save(email=email,nickname=nickname,name=name,gender=gender,password=password)
+
+        # password = make_password(self.request.data.get('password'))
+        # serializer.save(password=password)
+
+@api_view(['GET','POST'])
+def signup(request):
+
+    if request.method == "POST":
+
+        # print(request.data)
+
+        # email = request.data.get('email')
+        # nickname = request.data.get('nickname')
+        # name = request.data.get('name')
+        # gender = request.data.get('gender')
+        # password = request.data.get('user_id')
+        # print(email,nickname,name,gender,password)
+
+        # serializer = UserSerializer(email=email,nickname=nickname,name=name,gender=gender,password=password)
+        serializer = UserSerializer(data=request.data)
+        print(serializer.data)
+        serializer.save()
+        print("success")
+
 
 class UserLogin(generics.GenericAPIView):
 
@@ -47,7 +95,7 @@ class UserLogin(generics.GenericAPIView):
 class SlackList(generics.ListCreateAPIView):
     queryset = Slack.objects.all()
     serializer_class = SlackSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
     #User외래키 값 입력을 위한 오버라이딩 메소드
     def perform_create(self, serializer):
@@ -56,7 +104,7 @@ class SlackList(generics.ListCreateAPIView):
 class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Slack.objects.all()
     serializer_class = SlackSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
 
 class RegisterList(generics.ListCreateAPIView):

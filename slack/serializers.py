@@ -1,6 +1,7 @@
 from django.forms import widgets
 from rest_framework import serializers
-from slack.models import Slack,User,Register
+from slack.models import Slack,Register
+from django.contrib.auth.models import User
 
 # model에 저장된 값을 직렬화 하는 부분
 # object를 가져와서 데이터 형식에 맞게 변환
@@ -16,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     #fields 지정하는 것이 model 필드 값과 연결됨. api에서 보여지는 것 추가됨
     class Meta:
         model = User
-        fields = ('id','email','nickname','password','name','age','sex','created')
+        fields = ('id','email','nickname','password','name','gender')
 
 class SlackSerializer(serializers.ModelSerializer):
 
