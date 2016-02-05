@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password,check_password
-from slack.models import Slack,Register
+from slack.models import Slack,Register,User
 from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackRegisterSerializer
 from rest_framework import generics
 from rest_framework import permissions
@@ -12,21 +12,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.dispatch import receiver
 from allauth.account.signals import user_signed_up
 
-
-
 import logging
 logger = logging.getLogger(__name__)
-
-@receiver(user_signed_up)
-def set_gender(sender, **kwargs):
-    user = kwargs.pop('user')
-    extra_data = user.socialaccount_set.filter(provider='facebook')[0].extra_data
-    gender = extra_data['gender']
-
-    if gender == 'female':
-        user.gender = 'female'
-
-    user.save()
 
 # class UserSignup(generics.CreateAPIView):
 #     serializer_class = UserSerializer
@@ -95,16 +82,17 @@ class UserLogin(generics.GenericAPIView):
 class SlackList(generics.ListCreateAPIView):
     queryset = Slack.objects.all()
     serializer_class = SlackSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
     #User외래키 값 입력을 위한 오버라이딩 메소드
     def perform_create(self, serializer):
+        print(self.request.user)
         serializer.save(user=self.request.user)
 
 class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Slack.objects.all()
     serializer_class = SlackSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
 
 class RegisterList(generics.ListCreateAPIView):
@@ -113,8 +101,13 @@ class RegisterList(generics.ListCreateAPIView):
 
     #user, slack 외래키 값 입력을 위한 오버라이딩 메소드
     def perform_create(self, serializer):
-        slack = Slack.objects.get(self.request.data.get('slack'))
-        serializer.save(user=self.request.user,slack=slack)
+        print(self.request.data.get('slack'))
+        print(self.request.user)
+        id = self.request.data.get('slack')
+        id = 2
+        slack = Slack.objects.get(id=id)
+
+        serializer.save(user=self.request.user, slack=slack)
 
 class RegisterDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Register.objects.all()

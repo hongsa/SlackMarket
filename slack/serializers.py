@@ -1,7 +1,6 @@
 from django.forms import widgets
 from rest_framework import serializers
-from slack.models import Slack,Register
-from django.contrib.auth.models import User
+from slack.models import Slack,Register,User
 
 # model에 저장된 값을 직렬화 하는 부분
 # object를 가져와서 데이터 형식에 맞게 변환
@@ -10,14 +9,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     # model에 related_name으로 변수 설정해야함
     # user와 연결된 slack을 보여준다 slack부분에 외래키 설정되어있지만 반대형태로 이렇게 보여줌
-    # slack_user =serializers.PrimaryKeyRelatedField(many=True,queryset=Slack.objects.all())
-    # register_user =serializers.PrimaryKeyRelatedField(many=True,queryset=Register.objects.all())
+    slack_user =serializers.PrimaryKeyRelatedField(many=True,queryset=Slack.objects.all())
+    register_user =serializers.PrimaryKeyRelatedField(many=True,queryset=Register.objects.all())
 
     #meta 클래스에서 key값을 보여준다
     #fields 지정하는 것이 model 필드 값과 연결됨. api에서 보여지는 것 추가됨
     class Meta:
         model = User
-        fields = ('id','email','nickname','password','name','gender')
+        fields = ('id','email','username','slack_user','register_user')
 
 class SlackSerializer(serializers.ModelSerializer):
 

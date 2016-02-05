@@ -57,3 +57,16 @@
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 #
 #
+
+
+# user 커스톰 저장
+# @receiver(user_signed_up)
+# def set_gender(sender, **kwargs):
+#     user = kwargs.pop('user')
+#     extra_data = user.socialaccount_set.filter(provider='facebook')[0].extra_data
+#     gender = extra_data['gender']
+#
+#     if gender == 'female':
+#         user.gender = 'female'
+#
+#     user.save()

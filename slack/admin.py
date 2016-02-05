@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Slack,Register,CustomUser
+from .models import Slack,Register,User
 
 # Register your models here.
 
@@ -12,7 +12,6 @@ class SlackAdmin(admin.ModelAdmin):
 class RegisterAdmin(admin.ModelAdmin):
     list_display = ('id','type','description','user','slack')
 
-
-admin.site.register(CustomUser,UserAdmin)
+admin.site.register(User,UserAdmin)
 admin.site.register(Slack,SlackAdmin)
 admin.site.register(Register,RegisterAdmin)
