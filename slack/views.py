@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password,check_password
-from slack.models import Slack,Register,User
+from slack.models import Slack,Register,User,FacebookUser
 from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackRegisterSerializer
 from rest_framework import generics
 from rest_framework import permissions
@@ -16,10 +16,43 @@ from django.contrib.auth.decorators import login_required
 import logging
 logger = logging.getLogger(__name__)
 
+OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
+
+@api_view(['POST'])
+def facebook(request):
+
+    #값이 제대로 안오면 에러
+    if all(x in request.data for x in ['email','name','gender','updated_time','locale']):
+        email = request.data.get('email')
+        username = request.data.get('name')
+        gender = request.data.get('gender')
+        updated_time = request.data.get('updated_time')
+        locale = request.data.get('locale')
+        oauth_user_id = request.data.get('id')
+        password = OAUTH_SECRET_PASSWORD
+    else:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    #아이디가 있으면 로그인 없으면 생성
+    try:
+        facebook = FacebookUser.objects.get(oauth_user_id=str(oauth_user_id))
+        u = authenticate(email=facebook.user.email,password=OAUTH_SECRET_PASSWORD)
+        login(request,u)
+        return Response(status=status.HTTP_202_ACCEPTED)
+    except:
+        user = User.objects.create_user(email,username,password)
+        user.login_with_oauth=True
+        user.save()
+        FacebookUser(user=user, oauth_user_id=oauth_user_id, gender=gender, updated_time = updated_time,
+                         locale = locale).save()
+        u = authenticate(email=email, password=password)
+        login(request,u)
+        return Response(status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 def email_signup(request):
 
+    #값이 제대로 안오면 에러
     if all(x in request.data for x in ['email','username','password']):
         email = request.data.get('email')
         username = request.data.get('username')
@@ -27,8 +60,10 @@ def email_signup(request):
     else:
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    #이메일 중복 체크
     if User.objects.filter(email=email).count() > 0:
         return Response(status=status.HTTP_409_CONFLICT)
+    #닉네임 중복 체크
     elif User.objects.filter(username=username).count() > 0:
         return Response(status=status.HTTP_409_CONFLICT)
     else:
@@ -41,6 +76,7 @@ def email_signup(request):
 @api_view(['POST'])
 def email_login(request):
 
+    #값 제대로 안오면 에러
     if all(x in request.data for x in ['email', 'password']):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -49,22 +85,21 @@ def email_login(request):
 
     u = authenticate(email=email, password=password)
 
+    #인증되면 로그인
     if u:
-        print("login")
         login(request,u)
         return Response(status=status.HTTP_202_ACCEPTED)
 
     else:
         if User.objects.filter(email=email).count() > 0:
-
+            #oauth 로그인 해야함
             if User.objects.filter(email=email)[0].login_with_oauth == True:
-                print("oauth go")
                 return Response(status=status.HTTP_409_CONFLICT)
+            #패스워드 에러
             else:
-                print("password error")
                 return Response(status=status.HTTP_409_CONFLICT)
+        #해당 유저 없음
         else:
-            print("no user")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 

@@ -16,6 +16,5 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include('slack.urls')),
-    url(r'^accounts/', include('allauth.urls')),
 ]
 

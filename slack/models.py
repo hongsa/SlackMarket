@@ -104,15 +104,11 @@ class FacebookUser(models.Model):
     oauth_user_id = models.CharField(
         max_length = 30
     )
-    created_at = models.DateTimeField(
-        auto_now_add = True,
-        editable = False
-    )
-    updated_at = models.DateTimeField(
+    updated_time = models.DateTimeField(
         auto_now = True
     )
-
-
+    gender = models.CharField(max_length=10,default='male')
+    locale = models.CharField(max_length=50,default=0)
 
 
 #슬랙 테이블
