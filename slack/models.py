@@ -56,6 +56,7 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+    login_with_oauth = models.BooleanField(default=False)
 
     objects = MyUserManager()
 
@@ -90,20 +91,29 @@ class User(AbstractBaseUser):
         return self.is_admin
 
 
-# class CustUser(AbstractUser):
-#     """
-#     User profile which extends AbstractBaseUser class
-#     AbstractBaseUser contains basic fields like password and last_login
-#     """
-#     age = models.PositiveIntegerField(null=True, blank=True)
-#     gender = models.CharField(default='female',
-#                               max_length=20, blank=True)
-#     # to enforce that you require email field to be associated with
-#     # every user at registration
-#     REQUIRED_FIELDS = ["email"]
-#
-#     def __str__(self):
-#         return self.email
+class FacebookUser(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='facebook_user')
+    platform_choices = (
+        ('facebook', 'Facebook'),
+    )
+    platform = models.CharField(
+        max_length = 10,
+        choices = platform_choices,
+        default = 'facebook'
+    )
+    oauth_user_id = models.CharField(
+        max_length = 30
+    )
+    created_at = models.DateTimeField(
+        auto_now_add = True,
+        editable = False
+    )
+    updated_at = models.DateTimeField(
+        auto_now = True
+    )
+
+
+
 
 #슬랙 테이블
 class Slack(models.Model):

@@ -9,75 +9,64 @@ from rest_framework import status
 from slack.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
-from django.dispatch import receiver
-from allauth.account.signals import user_signed_up
+from django.http import HttpResponseRedirect, JsonResponse
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 
 import logging
 logger = logging.getLogger(__name__)
 
-# class UserSignup(generics.CreateAPIView):
-#     serializer_class = UserSerializer
-# #
-#     def perform_create(self, serializer):
-#         print(self.request.data)
-#         email = self.request.data.get('email')
-#         nickname = self.request.data.get('nickname')
-#         name = self.request.data.get('name')
-#         gender = self.request.data.get('gender')
-#         password = self.request.data.get('user_id')
-#
-#         print(email,nickname,name,gender,password)
-#         serializer.save(email=email,nickname=nickname,name=name,gender=gender,password=password)
 
-        # password = make_password(self.request.data.get('password'))
-        # serializer.save(password=password)
+@api_view(['POST'])
+def email_signup(request):
 
-@api_view(['GET','POST'])
-def signup(request):
+    if all(x in request.data for x in ['email','username','password']):
+        email = request.data.get('email')
+        username = request.data.get('username')
+        password = request.data.get('password')
+    else:
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    if request.method == "POST":
+    if User.objects.filter(email=email).count() > 0:
+        return Response(status=status.HTTP_409_CONFLICT)
+    elif User.objects.filter(username=username).count() > 0:
+        return Response(status=status.HTTP_409_CONFLICT)
+    else:
+        user = User.objects.create_user(email,username,password)
+        user.save()
+        u = authenticate(email=email, password=password)
+        login(request,u)
+        return Response(status=status.HTTP_201_CREATED)
 
-        # print(request.data)
+@api_view(['POST'])
+def email_login(request):
 
-        # email = request.data.get('email')
-        # nickname = request.data.get('nickname')
-        # name = request.data.get('name')
-        # gender = request.data.get('gender')
-        # password = request.data.get('user_id')
-        # print(email,nickname,name,gender,password)
+    if all(x in request.data for x in ['email', 'password']):
+        email = request.data.get('email')
+        password = request.data.get('password')
+    else:
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        # serializer = UserSerializer(email=email,nickname=nickname,name=name,gender=gender,password=password)
-        serializer = UserSerializer(data=request.data)
-        print(serializer.data)
-        serializer.save()
-        print("success")
+    u = authenticate(email=email, password=password)
 
+    if u:
+        print("login")
+        login(request,u)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
-class UserLogin(generics.GenericAPIView):
+    else:
+        if User.objects.filter(email=email).count() > 0:
 
-    # queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def post(self, request, *args, **kwargs):
-
-        email = request.POST.get('email',False)
-        pwd = request.POST.get('password',False)
-        user = User.objects.filter(email=email)
-
-        if user is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        elif not check_password(pwd,user[0].password):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(email=email)[0].login_with_oauth == True:
+                print("oauth go")
+                return Response(status=status.HTTP_409_CONFLICT)
+            else:
+                print("password error")
+                return Response(status=status.HTTP_409_CONFLICT)
         else:
-            request.session['userNickname'] = user[0].nickname
-            serializer = UserSerializer(user,many=True)
-            print("good")
-            return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
+            print("no user")
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-# class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
 
 class SlackList(generics.ListCreateAPIView):
     queryset = Slack.objects.all()
