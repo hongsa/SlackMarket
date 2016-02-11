@@ -22,17 +22,17 @@ class SlackSerializer(serializers.ModelSerializer):
 
     # 외래키로 연결된 user부분을 보여준다. 그러나 값을 입력은 불가, 왜냐면 자동으로 로그인되어있는 user값으로 들어가기 때문
     user_id = serializers.ReadOnlyField(source='user.id')
-    user_nickname = serializers.ReadOnlyField(source='user.nickname')
+    user_username = serializers.ReadOnlyField(source='user.username')
 
     class Meta:
         model = Slack
-        fields = ('id','name','url','token','description','type','category','created','user_id','user_nickname')
+        fields = ('id','name','url','token','description','type','category','created','user_id','user_username')
 
 class RegisterSerializer(serializers.ModelSerializer):
 
     #외래키로 연결된 user,slack 부분. 로그인과 선택되어있는 slack값이 default값으로 들어가므로 수정 불가능.
-    user = serializers.ReadOnlyField(source='user.id')
-    slack = serializers.ReadOnlyField(source='slack.id')
+    user = serializers.ReadOnlyField(source='user.name')
+    slack = serializers.ReadOnlyField(source='slack.name')
     class Meta:
         model = Register
         fields = ('id','type','description','created','user','slack')
@@ -46,7 +46,7 @@ class MyRegisterSerializer(serializers.ModelSerializer):
         model = Register
         fields = ('id','type','description','created','slack_name','user_nickname')
 
-class MySlackRegisterSerializer(serializers.ModelSerializer):
+class MySlackSerializer(serializers.ModelSerializer):
     slack_name = serializers.ReadOnlyField(source='slack.name')
     user_nickname = serializers.ReadOnlyField(source='user.nickname')
 

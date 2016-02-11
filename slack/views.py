@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password,check_password
 from slack.models import Slack,Register,User,FacebookUser
-from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackRegisterSerializer
+from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackSerializer
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -10,13 +10,18 @@ from slack.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseRedirect, JsonResponse
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, get_user
 from django.contrib.auth.decorators import login_required
+from django.contrib.sessions.models import Session
+from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework import status, viewsets
+
 
 import logging
 logger = logging.getLogger(__name__)
 
 OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
+
 
 @api_view(['POST'])
 def facebook(request):
@@ -44,10 +49,13 @@ def facebook(request):
         user.login_with_oauth=True
         user.save()
         FacebookUser(user=user, oauth_user_id=oauth_user_id, gender=gender, updated_time = updated_time,
-                         locale = locale).save()
+                     locale = locale).save()
         u = authenticate(email=email, password=password)
         login(request,u)
-        return Response(status=status.HTTP_201_CREATED)
+        serializer = UserSerializer(u)
+        headers = {'Set-Cookie' : request.session.session_key }
+        return Response(serializer.data, headers=headers,status=status.HTTP_201_CREATED)
+
 
 @api_view(['POST'])
 def email_signup(request):
@@ -71,8 +79,12 @@ def email_signup(request):
         user.save()
         u = authenticate(email=email, password=password)
         login(request,u)
-        return Response(status=status.HTTP_201_CREATED)
+        serializer = UserSerializer(u)
+        headers = {'Set-Cookie' : request.session.session_key }
+        return Response(serializer.data, headers=headers,status=status.HTTP_201_CREATED)
 
+
+# @ensure_csrf_cookie
 @api_view(['POST'])
 def email_login(request):
 
@@ -83,12 +95,14 @@ def email_login(request):
     else:
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    #인증
     u = authenticate(email=email, password=password)
-
     #인증되면 로그인
     if u:
         login(request,u)
-        return Response(status=status.HTTP_202_ACCEPTED)
+        serializer = UserSerializer(u)
+        headers = {'Set-Cookie' : request.session.session_key }
+        return Response(serializer.data, headers=headers, status=status.HTTP_202_ACCEPTED)
 
     else:
         if User.objects.filter(email=email).count() > 0:
@@ -101,6 +115,7 @@ def email_login(request):
         #해당 유저 없음
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 class SlackList(generics.ListCreateAPIView):
@@ -119,57 +134,63 @@ class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
 
-class RegisterList(generics.ListCreateAPIView):
-    queryset = Register.objects.all()
-    serializer_class = RegisterSerializer
+@api_view(['POST'])
+def register(request):
+    slack_id = int(request.data.get('slack_id'))
+    user_id = int(request.data.get('user_id'))
 
-    #user, slack 외래키 값 입력을 위한 오버라이딩 메소드
-    def perform_create(self, serializer):
-        print(self.request.data.get('slack'))
-        print(self.request.user)
-        id = self.request.data.get('slack')
-        id = 2
-        slack = Slack.objects.get(id=id)
+    if Register.objects.filter(slack=slack_id,user=user_id).count() > 0:
+        return Response(status=status.HTTP_409_CONFLICT)
 
-        serializer.save(user=self.request.user, slack=slack)
-
-class RegisterDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Register.objects.all()
-    serializer_class = RegisterSerializer
+    else:
+        slack = Slack.objects.get(id=slack_id)
+        user = User.objects.get(id=user_id)
+        description = request.data.get('description')
+        Register(user=user, slack=slack, description=description).save()
+        return Response(status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET','POST'])
-def my_register(request,pk):
+@api_view(['POST'])
+def my_register(request):
+    user_id = int(request.data)
     try:
-        my_register = Register.objects.filter(user_id=pk)
+        my_register = Register.objects.filter(user_id = user_id)
     except Register.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == "GET":
-        serializer = MyRegisterSerializer(my_register,many=True)
-        return Response(serializer.data)
+    serializer = MyRegisterSerializer(my_register,many=True)
+    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
-@api_view(['GET','PUT'])
+
+@api_view(['POST'])
+def my_slack(request):
+    user_id = int(request.data)
+    try:
+        my_slack = Slack.objects.filter(user_id = user_id)
+    except Slack.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SlackSerializer(my_slack,many=True)
+    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET','POST'])
 def my_slack_register(request,pk):
-
     if request.method == "GET":
         try:
-            my_slack_register = Register.objects.filter(slack_id=pk)
+            my_slack_register = Register.objects.filter(slack_id = pk)
         except Register.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = MySlackRegisterSerializer(my_slack_register,many=True)
-        return Response(serializer.data)
+        serializer = MyRegisterSerializer(my_slack_register,many=True)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     if request.method == "POST":
-
-        try:
-            my_slack_register = Register.objects.filter(slack_id=pk, user_id=request.data['user_id'])
-        except Register.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        serializer = MySlackRegisterSerializer(my_slack_register)
-        if serializer.is_valid():
-            serializer.save()
-
+        print(request.data)
+        id = request.data.get('register_id')
+        type = request.data.get('num')
+        my_slack_register = Register.objects.get(id = id)
+        my_slack_register.type = type
+        my_slack_register.save()
+        return Response(type, status=status.HTTP_202_ACCEPTED)
