@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password,check_password
 from slack.models import Slack,Register,User,FacebookUser

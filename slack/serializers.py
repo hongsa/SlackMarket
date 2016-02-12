@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.forms import widgets
 from rest_framework import serializers
 from slack.models import Slack,Register,User

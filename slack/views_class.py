@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # from slack.models import Slack
 # from slack.serializers import SlackSerializer,UserSerializer
 # from django.contrib.auth.models import User
