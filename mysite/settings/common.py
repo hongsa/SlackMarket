@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for mysite project.
 
@@ -55,6 +56,9 @@ SITE_ID = 1
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    'django.middleware.locale.LocaleMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -64,7 +68,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 
 )
 
@@ -140,10 +143,7 @@ DATABASES = {
 REST_FRAMEWORK = {
 
     #csrf 토큰 없애는 거 - 나중에 해결
-        # 'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework.authentication.TokenAuthentication',
-    # ),
-     'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
@@ -152,8 +152,18 @@ REST_FRAMEWORK = {
     'PAGINATE_BY': 10
 }
 
+# CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = (
+    'x-requested-with',
+    'content-type',
+    'accept',
+    'origin',
+    'authorization',
+    'X-CSRFToken'
+)
 
+# CSRF_COOKIE_DOMAIN = "http://localhost:8100/"
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
