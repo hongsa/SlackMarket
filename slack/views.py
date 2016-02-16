@@ -6,22 +6,20 @@ from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.response import Response
-from rest_framework import status
 from slack.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponseRedirect, JsonResponse
-from django.contrib.auth import authenticate, login, get_user
-from django.contrib.auth.decorators import login_required
-from django.contrib.sessions.models import Session
-from django.views.decorators.csrf import ensure_csrf_cookie
-from rest_framework import status, viewsets
+from django.contrib.auth import authenticate, login
+from rest_framework import status
+from rest_framework_jwt.settings import api_settings
+from slack.utils import token_required
 
+jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
+OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
 
 import logging
 logger = logging.getLogger(__name__)
-
-OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
 
 
 @api_view(['POST'])
@@ -51,11 +49,18 @@ def facebook(request):
         user.save()
         FacebookUser(user=user, oauth_user_id=oauth_user_id, gender=gender, updated_time = updated_time,
                      locale = locale).save()
-        u = authenticate(email=email, password=password)
-        login(request,u)
-        serializer = UserSerializer(u)
-        headers = {'Set-Cookie' : request.session.session_key }
-        return Response(serializer.data, headers=headers,status=status.HTTP_201_CREATED)
+        # u = authenticate(email=email, password=password)
+        # login(request,u)
+        # serializer = UserSerializer(u)
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
+
+        #serializer를 이용한 직렬화 및 토큰 추가
+        serializer = UserSerializer(user)
+        serializer_data = serializer.data
+        serializer_data['token'] = token
+
+        return Response(serializer_data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -78,14 +83,20 @@ def email_signup(request):
     else:
         user = User.objects.create_user(email,username,password)
         user.save()
-        u = authenticate(email=email, password=password)
-        login(request,u)
-        serializer = UserSerializer(u)
-        headers = {'Set-Cookie' : request.session.session_key }
-        return Response(serializer.data, headers=headers,status=status.HTTP_201_CREATED)
+        # u = authenticate(email=email, password=password)
+        # login(request,u)
+
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
+
+        #serializer를 이용한 직렬화 및 토큰 추가
+        serializer = UserSerializer(user)
+        serializer_data = serializer.data
+        serializer_data['token'] = token
+
+        return Response(serializer_data, status=status.HTTP_201_CREATED)
 
 
-# @ensure_csrf_cookie
 @api_view(['POST'])
 def email_login(request):
 
@@ -97,25 +108,40 @@ def email_login(request):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     #인증
-    u = authenticate(email=email, password=password)
-    #인증되면 로그인
-    if u:
-        login(request,u)
-        serializer = UserSerializer(u)
-        headers = {'Set-Cookie' : request.session.session_key }
-        return Response(serializer.data, headers=headers, status=status.HTTP_202_ACCEPTED)
+    # u = authenticate(email=email, password=password)
+    #인증되면 로그인(자동으로 세션 생성됨)
+    # login(request,u)
+    # 이 부분을 토큰으로 변경함
 
-    else:
-        if User.objects.filter(email=email).count() > 0:
-            #oauth 로그인 해야함
-            if User.objects.filter(email=email)[0].login_with_oauth == True:
-                return Response(status=status.HTTP_409_CONFLICT)
-            #패스워드 에러
-            else:
-                return Response(status=status.HTTP_409_CONFLICT)
-        #해당 유저 없음
+    try:
+        user = User.objects.get(email=email)
+        if check_password(password, user.password):
+
+            # jwt token 생성
+            payload = jwt_payload_handler(user)
+            token = jwt_encode_handler(payload)
+
+            #serializer를 이용한 직렬화 및 토큰 추가
+            serializer = UserSerializer(user)
+            serializer_data = serializer.data
+            serializer_data['token'] = token
+
+            return Response(serializer_data, status=status.HTTP_202_ACCEPTED)
+
         else:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            if User.objects.filter(email=email).count() > 0:
+                #oauth 로그인 해야함
+                print('social login please')
+                if User.objects.filter(email=email)[0].login_with_oauth == True:
+                    return Response(status=status.HTTP_409_CONFLICT)
+                #패스워드 에러
+                else:
+                    print('password error')
+                    return Response(status=status.HTTP_409_CONFLICT)
+            #해당 유저 없음
+    except:
+        print('no user')
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -136,7 +162,9 @@ class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['POST'])
+@token_required
 def register(request):
+
     slack_id = int(request.data.get('slack_id'))
     user_id = int(request.data.get('user_id'))
 
@@ -152,6 +180,7 @@ def register(request):
 
 
 @api_view(['POST'])
+@token_required
 def my_register(request):
     user_id = int(request.data)
     try:
@@ -164,7 +193,9 @@ def my_register(request):
 
 
 
+
 @api_view(['POST'])
+@token_required
 def my_slack(request):
     user_id = int(request.data)
     try:
@@ -177,6 +208,7 @@ def my_slack(request):
 
 
 @api_view(['GET','POST'])
+@token_required
 def my_slack_register(request,pk):
     if request.method == "GET":
         try:

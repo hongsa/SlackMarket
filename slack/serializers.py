@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     #fields 지정하는 것이 model 필드 값과 연결됨. api에서 보여지는 것 추가됨
     class Meta:
         model = User
-        fields = ('id','email','username','password','slack_user','register_user')
+        fields = ('id','email','username','slack_user','register_user')
 
 class SlackSerializer(serializers.ModelSerializer):
 
