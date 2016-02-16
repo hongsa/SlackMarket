@@ -17,6 +17,7 @@ jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
+SCROLL_NUMBER = 1
 
 import logging
 logger = logging.getLogger(__name__)
@@ -93,7 +94,6 @@ def email_signup(request):
         serializer = UserSerializer(user)
         serializer_data = serializer.data
         serializer_data['token'] = token
-
         return Response(serializer_data, status=status.HTTP_201_CREATED)
 
 
@@ -144,21 +144,53 @@ def email_login(request):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET','POST'])
+@token_required
+def slack_lists(request, pk):
 
-class SlackList(generics.ListCreateAPIView):
-    queryset = Slack.objects.all()
-    serializer_class = SlackSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+    offset = int(pk) * SCROLL_NUMBER
+    limit = (int(pk) + 1) * SCROLL_NUMBER
 
-    #User외래키 값 입력을 위한 오버라이딩 메소드
-    def perform_create(self, serializer):
-        print(self.request.user)
-        serializer.save(user=self.request.user)
+    try:
+        slack_lists = Slack.objects.order_by('-created')[offset : limit]
+        print(slack_lists)
+    except Slack.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Slack.objects.all()
-    serializer_class = SlackSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+    serializer = SlackSerializer(slack_lists,many=True)
+    print(serializer.data)
+    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['GET','POST'])
+@token_required
+def slack_detail(request, pk):
+
+    try:
+        slack_detail = Slack.objects.filter(id = pk)
+    except Slack.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SlackSerializer(slack_detail,many=True)
+    print(serializer.data)
+
+    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+# class SlackList(generics.ListCreateAPIView):
+#     queryset = Slack.objects.all()
+#     serializer_class = SlackSerializer
+#     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
+#
+#     #User외래키 값 입력을 위한 오버라이딩 메소드
+#     def perform_create(self, serializer):
+#         print(self.request.user)
+#         serializer.save(user=self.request.user)
+#
+# class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Slack.objects.all()
+#     serializer_class = SlackSerializer
+#     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
 
 @api_view(['POST'])
