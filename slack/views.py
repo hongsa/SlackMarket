@@ -17,7 +17,7 @@ jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
-SCROLL_NUMBER = 1
+SCROLL_NUMBER = 3
 
 import logging
 logger = logging.getLogger(__name__)
@@ -150,7 +150,6 @@ def slack_lists(request, pk):
 
     offset = int(pk) * SCROLL_NUMBER
     limit = (int(pk) + 1) * SCROLL_NUMBER
-
     try:
         slack_lists = Slack.objects.order_by('-created')[offset : limit]
         print(slack_lists)
@@ -158,7 +157,6 @@ def slack_lists(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = SlackSerializer(slack_lists,many=True)
-    print(serializer.data)
     return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
@@ -172,25 +170,7 @@ def slack_detail(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = SlackSerializer(slack_detail,many=True)
-    print(serializer.data)
-
     return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-
-
-# class SlackList(generics.ListCreateAPIView):
-#     queryset = Slack.objects.all()
-#     serializer_class = SlackSerializer
-#     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
-#
-#     #User외래키 값 입력을 위한 오버라이딩 메소드
-#     def perform_create(self, serializer):
-#         print(self.request.user)
-#         serializer.save(user=self.request.user)
-#
-# class SlackDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Slack.objects.all()
-#     serializer_class = SlackSerializer
-#     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly)
 
 
 @api_view(['POST'])
@@ -219,11 +199,8 @@ def my_register(request):
         my_register = Register.objects.filter(user_id = user_id)
     except Register.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-
     serializer = MyRegisterSerializer(my_register,many=True)
     return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-
-
 
 
 @api_view(['POST'])
@@ -234,7 +211,6 @@ def my_slack(request):
         my_slack = Slack.objects.filter(user_id = user_id)
     except Slack.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-
     serializer = SlackSerializer(my_slack,many=True)
     return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 

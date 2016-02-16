@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 from os.path import abspath,dirname
+from datetime import datetime, timedelta
 
 BASE_DIR = dirname(dirname(dirname(abspath(__file__))))
 
@@ -162,6 +163,9 @@ REST_FRAMEWORK = {
     ),
 }
 
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': timedelta(days=10)
+}
 
 # CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
@@ -198,3 +202,4 @@ OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
