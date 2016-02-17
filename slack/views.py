@@ -233,7 +233,7 @@ def my_slack(request, pk):
 
 @api_view(['GET','POST'])
 @token_required
-def my_slack_register(request,pk):
+def my_slack_check(request,pk):
     if request.method == "GET":
         try:
             my_slack_register = Register.objects.filter(slack_id = pk)
@@ -251,3 +251,25 @@ def my_slack_register(request,pk):
         my_slack_register.type = type
         my_slack_register.save()
         return Response(type, status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(['POST'])
+@token_required
+def slack_register(request):
+
+    if all(x in request.data for x in ['name','url','token','description','type','category','user_id']):
+
+        name = request.data.get('name')
+        url = request.data.get('url')
+        token = request.data.get('token')
+        description = request.data.get('description')
+        type = int(request.data.get('type'))
+        category = request.data.get('category')
+        user_id = request.data.get('user_id')
+
+    else:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    Slack(name=name, url=url, token=token, description=description, type=type, category=category,
+          user_id=user_id).save()
+    return Response(status=status.HTTP_201_CREATED)
