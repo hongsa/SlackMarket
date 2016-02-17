@@ -23,7 +23,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@api_view(['POST'])
+@api_view(['GET','POST'])
 def facebook(request):
 
     #값이 제대로 안오면 에러
@@ -41,9 +41,15 @@ def facebook(request):
     #아이디가 있으면 로그인 없으면 생성
     try:
         facebook = FacebookUser.objects.get(oauth_user_id=str(oauth_user_id))
-        u = authenticate(email=facebook.user.email,password=OAUTH_SECRET_PASSWORD)
-        login(request,u)
-        return Response(status=status.HTTP_202_ACCEPTED)
+        payload = jwt_payload_handler(facebook.user)
+        token = jwt_encode_handler(payload)
+
+        #serializer를 이용한 직렬화 및 토큰 추가
+        serializer = UserSerializer(facebook.user)
+        serializer_data = serializer.data
+        serializer_data['token'] = token
+
+        return Response(serializer_data, status=status.HTTP_202_ACCEPTED)
     except:
         user = User.objects.create_user(email,username,password)
         user.login_with_oauth=True
