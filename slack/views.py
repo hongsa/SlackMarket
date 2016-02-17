@@ -17,7 +17,7 @@ jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
-SCROLL_NUMBER = 3
+SCROLL_NUMBER = 1
 
 import logging
 logger = logging.getLogger(__name__)
@@ -150,14 +150,14 @@ def slack_lists(request, pk):
 
     offset = int(pk) * SCROLL_NUMBER
     limit = (int(pk) + 1) * SCROLL_NUMBER
-    try:
-        slack_lists = Slack.objects.order_by('-created')[offset : limit]
-        print(slack_lists)
-    except Slack.DoesNotExist:
+    slack_lists = Slack.objects.order_by('-created')[offset : limit]
+
+    if slack_lists:
+        serializer = SlackSerializer(slack_lists,many=True)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+    else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = SlackSerializer(slack_lists,many=True)
-    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 @api_view(['GET','POST'])
