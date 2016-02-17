@@ -11,8 +11,8 @@ urlpatterns = [
     url(r'^lists/(?P<pk>[0-9]+)/$', views.slack_lists),
     url(r'^slacks/(?P<pk>[0-9]+)/$', views.slack_detail),
     url(r'^register/$', views.register),
-    url(r'^myregisters/$', views.my_register),
-    url(r'^myslacks/$', views.my_slack),
+    url(r'^myregisters/(?P<pk>[0-9]+)/$', views.my_register),
+    url(r'^myslackslist/(?P<pk>[0-9]+)/$', views.my_slack),
     url(r'^myslacks/(?P<pk>[0-9]+)/$', views.my_slack_register),
 
     #facebook login test

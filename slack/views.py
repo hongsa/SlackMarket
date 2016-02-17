@@ -144,7 +144,7 @@ def email_login(request):
                 else:
                     print('password error')
                     return Response(status=status.HTTP_409_CONFLICT)
-            #해당 유저 없음
+                    #해당 유저 없음
     except:
         print('no user')
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -199,26 +199,36 @@ def register(request):
 
 @api_view(['POST'])
 @token_required
-def my_register(request):
+def my_register(request, pk):
+
+    offset = int(pk) * SCROLL_NUMBER
+    limit = (int(pk) + 1) * SCROLL_NUMBER
     user_id = int(request.data)
-    try:
-        my_register = Register.objects.filter(user_id = user_id)
-    except Register.DoesNotExist:
+
+    my_registers = Register.objects.filter(user_id = user_id).order_by('-created')[offset : limit]
+    if my_registers:
+        serializer = MyRegisterSerializer(my_registers,many=True)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    else:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    serializer = MyRegisterSerializer(my_register,many=True)
-    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 @api_view(['POST'])
 @token_required
-def my_slack(request):
+def my_slack(request, pk):
+
+    offset = int(pk) * SCROLL_NUMBER
+    limit = (int(pk) + 1) * SCROLL_NUMBER
     user_id = int(request.data)
-    try:
-        my_slack = Slack.objects.filter(user_id = user_id)
-    except Slack.DoesNotExist:
+
+    my_slacks = Slack.objects.filter(user_id = user_id).order_by('-created')[offset : limit]
+    if my_slacks:
+        serializer = SlackSerializer(my_slacks, many=True)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    else:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    serializer = SlackSerializer(my_slack,many=True)
-    return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 @api_view(['GET','POST'])
