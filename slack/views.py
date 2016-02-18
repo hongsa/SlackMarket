@@ -3,12 +3,8 @@ from django.shortcuts import render
 from django.contrib.auth.hashers import make_password,check_password
 from slack.models import Slack,Register,User,FacebookUser
 from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackSerializer
-from rest_framework import generics
-from rest_framework import permissions
 from rest_framework.response import Response
-from slack.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
-from django.contrib.auth import authenticate, login
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 from slack.utils import token_required
@@ -17,7 +13,7 @@ jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
-SCROLL_NUMBER = 1
+SCROLL_NUMBER = 3
 
 import logging
 logger = logging.getLogger(__name__)
@@ -258,7 +254,6 @@ def my_slack_check(request,pk):
 def slack_register(request):
 
     if all(x in request.data for x in ['name','url','token','description','type','category','user_id']):
-
         name = request.data.get('name')
         url = request.data.get('url')
         token = request.data.get('token')
