@@ -139,6 +139,8 @@ class Register(models.Model):
     type = models.IntegerField(default=0)
     description = models.TextField(default="")
     created = models.DateTimeField(auto_now_add=True)
+    is_check = models.BooleanField(default=False)
+
     #foreignkey
     user =models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='register_user')
     slack = models.ForeignKey('Slack',on_delete=models.CASCADE,related_name='register_slack')

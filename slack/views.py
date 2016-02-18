@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.contrib.auth.hashers import make_password,check_password
 from slack.models import Slack,Register,User,FacebookUser
 from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackSerializer
@@ -8,6 +8,10 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 from slack.utils import token_required
+from urllib.request import Request
+from urllib.request import urlopen
+from urllib.parse import urlencode
+import json
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -232,7 +236,7 @@ def my_slack(request, pk):
 def my_slack_check(request,pk):
     if request.method == "GET":
         try:
-            my_slack_register = Register.objects.filter(slack_id = pk)
+            my_slack_register = Register.objects.filter(slack_id = pk, is_check = False)
         except Register.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -240,12 +244,13 @@ def my_slack_check(request,pk):
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     if request.method == "POST":
-        print(request.data)
         id = request.data.get('register_id')
         type = request.data.get('num')
         my_slack_register = Register.objects.get(id = id)
         my_slack_register.type = type
+        my_slack_register.is_check = True
         my_slack_register.save()
+
         return Response(type, status=status.HTTP_202_ACCEPTED)
 
 
@@ -267,4 +272,38 @@ def slack_register(request):
 
     Slack(name=name, url=url, token=token, description=description, type=type, category=category,
           user_id=user_id).save()
+
+
     return Response(status=status.HTTP_201_CREATED)
+
+@api_view(['GET','POST'])
+# @token_required
+def send_invite_email(request):
+    print(request.data)
+
+    slack_id = int(request.data.get('slack_id'))
+    user_id = int(request.data.get('user_id'))
+
+    slack = Slack.objects.get(id = slack_id)
+    serializer_slack = SlackSerializer(slack)
+    user = User.objects.get(id = user_id)
+    serializer_user = UserSerializer(user)
+
+    try:
+        url = "https://" + serializer_slack.data['url'] + "/api/users.admin.invite"
+        data = {"email":serializer_user.data['email'], "token":serializer_slack.data['token'], "set_active":True}
+        data = urlencode(data).encode('utf-8')
+        print(data)
+        req = Request(url, data=data)
+        resp = urlopen(req)
+        result = json.loads(resp.read().decode('utf-8'))
+
+        if(result['ok'] == True):
+            return Response(status = status.HTTP_200_OK)
+        else:
+            return Response(status = status.HTTP_400_BAD_REQUEST)
+
+    except:
+        return Response(status = status.HTTP_400_BAD_REQUEST)
+
+

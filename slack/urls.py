@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^myslackslist/(?P<pk>[0-9]+)/$', views.my_slack),
     url(r'^myslacks/(?P<pk>[0-9]+)/$', views.my_slack_check),
     url(r'^slregister/$', views.slack_register),
+    url(r'^invite/$', views.send_invite_email),
 
     #facebook login test
 
