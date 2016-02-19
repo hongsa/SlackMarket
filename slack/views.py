@@ -8,18 +8,9 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 from slack.utils import token_required
-from urllib.request import Request, urlopen
-from urllib.parse import urlencode
+from urllib2 import Request, urlopen
+from urllib import urlencode
 import json
-
-# try:
-#     # For Python 3.0 and later
-#     from urllib.request import urlopen,Request
-# except ImportError:
-#     # Fall back to Python 2's urllib2
-#     from urllib2 import urlopen,Request
-#     from urllib2 import quote as urlencode
-
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -305,13 +296,14 @@ def send_invite_email(request):
         req = Request(url, data=data)
         resp = urlopen(req)
         result = json.loads(resp.read().decode('utf-8'))
+        print(result)
 
         if(result['ok'] == True):
             return Response(status = status.HTTP_200_OK)
         else:
-            return Response(status = status.HTTP_400_BAD_REQUEST)
+            return Response(status = status.HTTP_403_FORBIDDEN)
 
     except:
-        return Response(status = status.HTTP_400_BAD_REQUEST)
+        return Response(status = status.HTTP_404_NOT_FOUND)
 
 
