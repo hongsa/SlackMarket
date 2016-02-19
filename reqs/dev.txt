@@ -1,2 +1,4 @@
 -r common.txt
 django-debug_toolbar
+Werkzeug
+pymysql

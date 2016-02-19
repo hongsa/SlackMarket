@@ -8,10 +8,18 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 from slack.utils import token_required
-from urllib.request import Request
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from urllib.parse import urlencode
 import json
+
+# try:
+#     # For Python 3.0 and later
+#     from urllib.request import urlopen,Request
+# except ImportError:
+#     # Fall back to Python 2's urllib2
+#     from urllib2 import urlopen,Request
+#     from urllib2 import quote as urlencode
+
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -232,7 +240,7 @@ def my_slack(request, pk):
 
 
 @api_view(['GET','POST'])
-@token_required
+# @token_required
 def my_slack_check(request,pk):
     if request.method == "GET":
         try:
