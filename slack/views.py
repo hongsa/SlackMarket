@@ -35,7 +35,7 @@ def facebook(request):
         oauth_user_id = request.data.get('id')
         password = OAUTH_SECRET_PASSWORD
     else:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     #아이디가 있으면 로그인 없으면 생성
     try:
@@ -78,7 +78,7 @@ def email_signup(request):
         username = request.data.get('username')
         password = request.data.get('password')
     else:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     #이메일 중복 체크
     if User.objects.filter(email=email).count() > 0:
@@ -110,7 +110,7 @@ def email_login(request):
         email = request.data.get('email')
         password = request.data.get('password')
     else:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     #인증
     # u = authenticate(email=email, password=password)
@@ -146,7 +146,7 @@ def email_login(request):
                     #해당 유저 없음
     except:
         print('no user')
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET','POST'])
@@ -267,7 +267,7 @@ def slack_register(request):
         user_id = request.data.get('user_id')
 
     else:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     Slack(name=name, url=url, token=token, description=description, type=type, category=category,
           user_id=user_id).save()

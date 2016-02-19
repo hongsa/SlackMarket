@@ -17,7 +17,7 @@ ROOT_DIR = os.path.dirname(PROJECT_DIR)
 print(ROOT_DIR)
 APPS_DIR = os.path.join(ROOT_DIR, 'slack')
 print(APPS_DIR)
-LIB_DIR = os.path.join(ROOT_DIR, 'myvenv/lib/python3.4/site-packages')
+LIB_DIR = os.path.join(ROOT_DIR, 'myvenv/lib/python2.7/site-packages')
 print(LIB_DIR)
 
 sys.path.insert(0, PROJECT_DIR)
