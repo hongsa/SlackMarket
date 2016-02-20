@@ -216,9 +216,8 @@ def my_register(request, pk):
 
     my_registers = Register.objects.filter(user_id = user_id).order_by('-created')[offset : limit]
     if my_registers:
-        serializer = MyRegisterSerializer(my_registers,many=True)
+        serializer = RegisterSerializer(my_registers,many=True)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -241,7 +240,7 @@ def my_slack(request, pk):
 
 
 @api_view(['GET','POST'])
-# @token_required
+@token_required
 def my_slack_check(request,pk):
     if request.method == "GET":
         try:
@@ -249,7 +248,7 @@ def my_slack_check(request,pk):
         except Register.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = MyRegisterSerializer(my_slack_register,many=True)
+        serializer = RegisterSerializer(my_slack_register,many=True)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     if request.method == "POST":
@@ -286,7 +285,7 @@ def slack_register(request):
     return Response(status=status.HTTP_201_CREATED)
 
 @api_view(['GET','POST'])
-# @token_required
+@token_required
 def send_invite_email(request):
     print(request.data)
 
