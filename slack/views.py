@@ -82,10 +82,10 @@ def email_signup(request):
 
     #이메일 중복 체크
     if User.objects.filter(email=email).count() > 0:
-        return Response(status=status.HTTP_409_CONFLICT)
+        return Response(data='email',status=status.HTTP_409_CONFLICT)
     #닉네임 중복 체크
     elif User.objects.filter(username=username).count() > 0:
-        return Response(status=status.HTTP_409_CONFLICT)
+        return Response(data='username',status=status.HTTP_409_CONFLICT)
     else:
         user = User.objects.create_user(email,username,password)
         user.save()
@@ -112,11 +112,13 @@ def email_login(request):
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    #인증
-    # u = authenticate(email=email, password=password)
-    #인증되면 로그인(자동으로 세션 생성됨)
-    # login(request,u)
-    # 이 부분을 토큰으로 변경함
+    '''
+    인증
+    u = authenticate(email=email, password=password)
+    인증되면 로그인(자동으로 세션 생성됨)
+    login(request,u)
+    이 부분을 토큰으로 변경함
+    '''
 
     try:
         user = User.objects.get(email=email)
@@ -142,7 +144,7 @@ def email_login(request):
                 #패스워드 에러
                 else:
                     print('password error')
-                    return Response(status=status.HTTP_409_CONFLICT)
+                    return Response(status=status.HTTP_403_FORBIDDEN)
                     #해당 유저 없음
     except:
         print('no user')
