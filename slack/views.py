@@ -11,6 +11,9 @@ from slack.utils import token_required
 from urllib2 import Request, urlopen
 from urllib import urlencode
 import json
+from django.utils.timezone import now
+
+
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -52,6 +55,7 @@ def facebook(request):
     except:
         user = User.objects.create_user(email,username,password)
         user.login_with_oauth=True
+        user.last_login = now()
         user.save()
         FacebookUser(user=user, oauth_user_id=oauth_user_id, gender=gender, updated_time = updated_time,
                      locale = locale).save()
@@ -88,6 +92,7 @@ def email_signup(request):
         return Response(data='username',status=status.HTTP_409_CONFLICT)
     else:
         user = User.objects.create_user(email,username,password)
+        user.last_login = now()
         user.save()
         # u = authenticate(email=email, password=password)
         # login(request,u)
@@ -123,6 +128,9 @@ def email_login(request):
     try:
         user = User.objects.get(email=email)
         if check_password(password, user.password):
+
+            user.last_login = now()
+            user.save()
 
             # jwt token 생성
             payload = jwt_payload_handler(user)
