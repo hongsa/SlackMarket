@@ -202,7 +202,8 @@ def register(request):
         slack = Slack.objects.get(id=slack_id)
         user = User.objects.get(id=user_id)
         description = request.data.get('description')
-        Register(user=user, slack=slack, description=description).save()
+        register = Register(user=user, slack=slack, description=description)
+        register.save()
         return Response(status=status.HTTP_201_CREATED)
 
 
@@ -256,8 +257,6 @@ def my_slack_check(request,pk):
         type = request.data.get('num')
         my_slack_register = Register.objects.get(id = id)
         my_slack_register.type = type
-        my_slack_register.is_check = True
-        my_slack_register.save()
 
         return Response(type, status=status.HTTP_202_ACCEPTED)
 
@@ -308,6 +307,9 @@ def send_invite_email(request):
         print(result)
 
         if(result['ok'] == True):
+            register = Register.objects.filter(slack_id = slack_id, user_id = user_id)
+            register.is_check = True
+            register.save()
             return Response(status = status.HTTP_200_OK)
         else:
             return Response(status = status.HTTP_403_FORBIDDEN)
