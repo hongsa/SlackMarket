@@ -14,7 +14,6 @@ import json
 from django.utils.timezone import now
 
 
-
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
@@ -50,6 +49,9 @@ def facebook(request):
         serializer = UserSerializer(facebook.user)
         serializer_data = serializer.data
         serializer_data['token'] = token
+
+        facebook.user.last_login = now()
+        facebook.user.save()
 
         return Response(serializer_data, status=status.HTTP_202_ACCEPTED)
     except:
@@ -203,6 +205,10 @@ def register(request):
         user = User.objects.get(id=user_id)
         description = request.data.get('description')
         register = Register(user=user, slack=slack, description=description)
+
+        if slack.type == 0 :
+            register.type = 1
+
         register.save()
         return Response(status=status.HTTP_201_CREATED)
 
