@@ -37,20 +37,3 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Register
         fields = ('id','type','description','created','user','slack')
-
-class MyRegisterSerializer(serializers.ModelSerializer):
-
-    slack_name = serializers.ReadOnlyField(source='slack.name')
-    user_username = serializers.ReadOnlyField(source='user.username')
-
-    class Meta:
-        model = Register
-        fields = ('id','type','description','created','slack_name','user_username')
-
-class MySlackSerializer(serializers.ModelSerializer):
-    slack_name = serializers.ReadOnlyField(source='slack.name')
-    user_username = serializers.ReadOnlyField(source='user.username')
-
-    class Meta:
-        model = Register
-        fields = ('id','type','description','slack_name','user_username')

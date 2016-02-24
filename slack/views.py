@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-from django.shortcuts import render,redirect
-from django.contrib.auth.hashers import make_password,check_password
+from django.contrib.auth.hashers import check_password
+from django.utils.timezone import now
 from slack.models import Slack,Register,User,FacebookUser
-from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer,MyRegisterSerializer,MySlackSerializer
+from slack.serializers import SlackSerializer,UserSerializer,RegisterSerializer
+from slack.utils import token_required
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
-from slack.utils import token_required
 from urllib2 import Request, urlopen
 from urllib import urlencode
 import json
-from django.utils.timezone import now
-
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
