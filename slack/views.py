@@ -16,7 +16,7 @@ jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 OAUTH_SECRET_PASSWORD = 'vpdltmqnrtktjd'
-SCROLL_NUMBER = 3
+SCROLL_NUMBER = 5
 
 import logging
 logger = logging.getLogger(__name__)

@@ -9,3 +9,6 @@ etc.txt
 manage.py
 requirements.txt
 slack/migrations
+slack/views_class.py
+slack/views_func.py
+slack/views_old.py
