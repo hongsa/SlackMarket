@@ -3,3 +3,9 @@ __pycache__
 myvenv
 db.sqlite3
 .DS_Store
+mysite
+reqs
+etc.txt
+manage.py
+requirements.txt
+slack/migrations
