@@ -1,7 +1,0 @@
-django ==1.8
-djangorestframework
-django_extensions
-django-cors-headers
-django-allauth
-mysqlclient
-djangorestframework-jwt
